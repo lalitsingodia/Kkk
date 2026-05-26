@@ -1,0 +1,144 @@
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+  NBFC COLLECTION ALLOCATION — ML MODEL AUDIT REPORT
+  Generated: 26 May 2026 04:33:23
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  EXECUTIVE SUMMARY
+══════════════════════════════════════════════════════════════════════════════════════════
+  Model AUC (cross-validated):   0.5187  ±0.1368
+  
+  Weight changes recommended:    8
+  New attributes recommended:    0
+  Threshold changes recommended: 3
+  
+  Action Priority: HIGH
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  FEATURE IMPORTANCE RANKING (SHAP — XGBoost)
+══════════════════════════════════════════════════════════════════════════════════════════
+  Top 15 features by SHAP importance:
+  
+     1. call_pickup_rate                     14.9%  █████████  [  current  ]
+     2. bbps_pct                             14.0%  █████████  [  current  ]
+     3. payment_mode_entropy                  9.2%  ██████  [★ CANDIDATE]
+     4. outstanding_amount_log                8.7%  █████  [★ CANDIDATE]
+     5. composite_score                       7.5%  █████  [  current  ]
+     6. qr_pct                                7.5%  ████  [  current  ]
+     7. cash_pct                              6.8%  ████  [  current  ]
+     8. delay_trend                           5.0%  ███  [★ CANDIDATE]
+     9. field_visit_density                   4.8%  ███  [★ CANDIDATE]
+    10. on_time_pct                           4.0%  ██  [  current  ]
+    11. avg_delay_days                        3.6%  ██  [  current  ]
+    12. digital_shift_trend                   3.3%  ██  [★ CANDIDATE]
+    13. upi_pct                               2.4%  █  [  current  ]
+    14. bounce_rate                           2.0%  █  [★ CANDIDATE]
+    15. conversation_rate                     2.0%  █  [  current  ]
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  COEFFICIENT RECOMMENDATIONS
+══════════════════════════════════════════════════════════════════════════════════════════
+  Formula: contactability_score
+  
+    ╭─────────────────────┬───────────┬───────────────┬─────────┬────────────────┬──────────╮
+    │ Feature             │   Current │   Recommended │   Delta │ 95% CI         │ Status   │
+    ├─────────────────────┼───────────┼───────────────┼─────────┼────────────────┼──────────┤
+    │ call_pickup_rate    │      0.35 │         0.214 │  -0.136 │ [0.013, 0.418] │ ok       │
+    │ conversation_rate   │      0.25 │         0.002 │  -0.248 │ [0.007, 0.302] │ ⚠ CHANGE │
+    │ number_active       │      0.2  │         0.189 │  -0.011 │ [0.009, 0.569] │ ok       │
+    │ switchoff_penalty   │      0.15 │         0.234 │   0.084 │ [0.015, 0.462] │ ok       │
+    │ guarantor_reachable │      0.05 │         0.361 │   0.311 │ [0.038, 0.485] │ ⚠ CHANGE │
+    ╰─────────────────────┴───────────┴───────────────┴─────────┴────────────────┴──────────╯
+  
+  Formula: digital_affinity
+  
+    ╭───────────┬───────────┬───────────────┬─────────┬────────────────┬──────────╮
+    │ Feature   │   Current │   Recommended │   Delta │ 95% CI         │ Status   │
+    ├───────────┼───────────┼───────────────┼─────────┼────────────────┼──────────┤
+    │ upi_pct   │      1    │         0.004 │  -0.996 │ [0.005, 0.270] │ ⚠ CHANGE │
+    │ enach_pct │      0.9  │         0.369 │  -0.531 │ [0.166, 0.521] │ ⚠ CHANGE │
+    │ bbps_pct  │      0.7  │         0.281 │  -0.419 │ [0.063, 0.409] │ ⚠ CHANGE │
+    │ qr_pct    │      0.35 │         0.183 │  -0.167 │ [0.021, 0.325] │ ⚠ CHANGE │
+    │ cash_pct  │      0.05 │         0.164 │   0.114 │ [0.045, 0.258] │ ok       │
+    ╰───────────┴───────────┴───────────────┴─────────┴────────────────┴──────────╯
+  
+  Formula: composite_score
+  
+    ╭──────────────────────┬───────────┬───────────────┬─────────┬────────────────┬──────────╮
+    │ Feature              │   Current │   Recommended │   Delta │ 95% CI         │ Status   │
+    ├──────────────────────┼───────────┼───────────────┼─────────┼────────────────┼──────────┤
+    │ contactability_score │      0.4  │         0.094 │  -0.306 │ [0.006, 0.449] │ ⚠ CHANGE │
+    │ digital_affinity     │      0.25 │         0.353 │   0.103 │ [0.034, 0.489] │ ok       │
+    │ delay_score          │      0.2  │         0.167 │  -0.033 │ [0.013, 0.457] │ ok       │
+    │ on_time_pct          │      0.15 │         0.386 │   0.236 │ [0.087, 0.602] │ ⚠ CHANGE │
+    ╰──────────────────────┴───────────┴───────────────┴─────────┴────────────────┴──────────╯
+  
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  NEW ATTRIBUTE RECOMMENDATIONS
+══════════════════════════════════════════════════════════════════════════════════════════
+  No new attributes meet the inclusion threshold at this time.
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  ALLOCATION THRESHOLD RECOMMENDATIONS
+══════════════════════════════════════════════════════════════════════════════════════════
+  ai_contactability_threshold:
+    Current value:     65
+    Recommended value: 75  (Δ +10)
+    Status:            ⚠ CHANGE RECOMMENDED
+  
+  tele_contactability_lower_bound:
+    Current value:     30
+    Recommended value: 15  (Δ -15)
+    Status:            ⚠ CHANGE RECOMMENDED
+  
+  field_delay_threshold:
+    Current value:     20
+    Recommended value: 10  (Δ -10)
+    Status:            ⚠ CHANGE RECOMMENDED
+  
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  RECOMMENDED UPDATED SCORING FORMULAS
+══════════════════════════════════════════════════════════════════════════════════════════
+  CONTACTABILITY SCORE (recommended weights):
+    call_pickup_rate             × 0.214
+    conversation_rate            × 0.002
+    number_active                × 0.189
+    switchoff_penalty            × 0.234
+    guarantor_reachable          × 0.361
+  
+  DIGITAL AFFINITY (recommended weights):
+    upi_pct                      × 0.004  (mapped to 0–100 scale)
+    enach_pct                    × 0.369  (mapped to 0–100 scale)
+    bbps_pct                     × 0.281  (mapped to 0–100 scale)
+    qr_pct                       × 0.183  (mapped to 0–100 scale)
+    cash_pct                     × 0.164  (mapped to 0–100 scale)
+  
+  COMPOSITE SCORE (recommended weights):
+    contactability_score         × 0.094
+    digital_affinity             × 0.353
+    delay_score                  × 0.167
+    on_time_pct                  × 0.386
+
+══════════════════════════════════════════════════════════════════════════════════════════
+  RECOMMENDED ACTION PLAN
+══════════════════════════════════════════════════════════════════════════════════════════
+    1. Update weights in 'contactability_score':
+       conversation_rate: 0.250 → 0.002  (Δ -0.248)
+       guarantor_reachable: 0.050 → 0.361  (Δ +0.311)
+    2. Update weights in 'digital_affinity':
+       upi_pct: 1.000 → 0.004  (Δ -0.996)
+       enach_pct: 0.900 → 0.369  (Δ -0.531)
+       bbps_pct: 0.700 → 0.281  (Δ -0.419)
+       qr_pct: 0.350 → 0.183  (Δ -0.167)
+    3. Update weights in 'composite_score':
+       contactability_score: 0.400 → 0.094  (Δ -0.306)
+       on_time_pct: 0.150 → 0.386  (Δ +0.236)
+    4. Update threshold 'ai_contactability_threshold': 65 → 75
+    5. Update threshold 'tele_contactability_lower_bound': 30 → 15
+    6. Update threshold 'field_delay_threshold': 20 → 10
+
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+  END OF REPORT
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
