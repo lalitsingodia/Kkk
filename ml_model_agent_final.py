@@ -38,6 +38,7 @@ Usage:
 """
 
 import os
+import sys
 import json
 import datetime
 import warnings
@@ -58,6 +59,13 @@ import shap
 
 warnings.filterwarnings("ignore")
 np.random.seed(42)
+
+# Force UTF-8 output on Windows so box-drawing / special chars don't crash
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except AttributeError:
+        pass  # Python < 3.7 fallback — chars will be replaced with '?'
 
 # ─────────────────────────────────────────────────────────────────────────────
 # AGENT CONFIGURATION
@@ -650,7 +658,7 @@ def detect_drift(current_auc: float, new_feature_recs: list) -> dict:
     drift_report = {"previous_auc": None, "auc_change": None, "drift_detected": False}
 
     if state_file.exists():
-        with open(state_file) as f:
+        with open(state_file, encoding="utf-8") as f:
             state = json.load(f)
         prev_auc = state.get("last_auc", None)
         if prev_auc:
@@ -665,7 +673,7 @@ def detect_drift(current_auc: float, new_feature_recs: list) -> dict:
         "last_auc": round(current_auc, 4),
         "recommended_new_features": [r["feature"] for r in new_feature_recs if r["recommend_add"]],
     }
-    with open(state_file, "w") as f:
+    with open(state_file, "w", encoding="utf-8") as f:
         json.dump(new_state, f, indent=2)
 
     return drift_report
@@ -685,13 +693,13 @@ def write_report(
     filepath = os.path.join(AGENT_CONFIG["report_dir"], f"model_audit_{ts}.txt")
 
     lines = []
-    def h(title): lines.append("\n" + "═"*90 + f"\n  {title}\n" + "═"*90)
+    def h(title): lines.append("\n" + "="*90 + f"\n  {title}\n" + "="*90)
     def p(text=""):  lines.append(f"  {text}")
 
-    lines.append("▓"*90)
-    lines.append("  NBFC COLLECTION ALLOCATION — ML MODEL AUDIT REPORT")
+    lines.append("#"*90)
+    lines.append("  NBFC COLLECTION ALLOCATION -- ML MODEL AUDIT REPORT")
     lines.append(f"  Generated: {datetime.datetime.now().strftime('%d %b %Y %H:%M:%S')}")
-    lines.append("▓"*90)
+    lines.append("#"*90)
 
     # ── Executive Summary ────────────────────────────────────────────────────
     h("EXECUTIVE SUMMARY")
@@ -701,7 +709,7 @@ def write_report(
         p(f"Previous run AUC:              {drift_report['previous_auc']}")
         p(f"AUC change:                    {drift_report['auc_change']:+.4f}")
         if drift_report["drift_detected"]:
-            p("⚠ DRIFT DETECTED — AUC shifted >5%. Review data pipeline and feature distributions.")
+            p("!! DRIFT DETECTED -- AUC shifted >5%. Review data pipeline and feature distributions.")
     p()
 
     flagged_weights = sum(
@@ -728,8 +736,8 @@ def write_report(
     p()
     top15 = shap_df.head(15)
     for _, row in top15.iterrows():
-        bar  = "█" * int(row["shap_pct"] / 1.5)
-        tag  = "★ CANDIDATE" if row["status"] == "CANDIDATE" else "  current  "
+        bar  = "|" * int(row["shap_pct"] / 1.5)
+        tag  = "* CANDIDATE" if row["status"] == "CANDIDATE" else "  current  "
         p(f"  {int(row['rank']):>2}. {row['feature']:<35} {row['shap_pct']:>5.1f}%  {bar}  [{tag}]")
 
     # ── Coefficient Recommendations ──────────────────────────────────────────
@@ -739,7 +747,7 @@ def write_report(
         p()
         rows = []
         for feat, vals in formula_recs.items():
-            flag_str = "⚠ CHANGE" if vals["flag_change"] else "  ok    "
+            flag_str = "!! CHANGE" if vals["flag_change"] else "  ok    "
             rows.append([
                 feat,
                 f"{vals['current_weight']:.3f}",
@@ -750,7 +758,7 @@ def write_report(
             ])
         table = tabulate(rows,
             headers=["Feature","Current","Recommended","Delta","95% CI","Status"],
-            tablefmt="rounded_outline")
+            tablefmt="outline")
         for line in table.split("\n"):
             p("  " + line)
         p()
@@ -761,7 +769,7 @@ def write_report(
         p("The following candidate features are recommended for inclusion:\n")
         rows = []
         for r in new_attr_recs:
-            rec_str = "✓ ADD" if r["recommend_add"] else "  skip"
+            rec_str = "[ADD]" if r["recommend_add"] else " skip"
             sig_str = "Yes" if r["significant"] else "No"
             rows.append([
                 r["feature"],
@@ -776,7 +784,7 @@ def write_report(
             ])
         table = tabulate(rows,
             headers=["Feature","SHAP","SHAP%","Rank","AUC Gain","p-val","Sig?","Sug. Weight","Action"],
-            tablefmt="rounded_outline")
+            tablefmt="outline")
         for line in table.split("\n"):
             p("  " + line)
     else:
@@ -785,7 +793,7 @@ def write_report(
     # ── Threshold Recommendations ─────────────────────────────────────────────
     h("ALLOCATION THRESHOLD RECOMMENDATIONS")
     for thresh_name, vals in threshold_recs.items():
-        flag_str = "⚠ CHANGE RECOMMENDED" if vals["flag"] else "  no change needed"
+        flag_str = "!! CHANGE RECOMMENDED" if vals["flag"] else "  no change needed"
         p(f"{thresh_name}:")
         p(f"  Current value:     {vals['current']}")
         p(f"  Recommended value: {vals['recommended']}  (Δ {vals['change']:+d})")
@@ -843,13 +851,13 @@ def write_report(
         p(f"  {action_num}. Investigate model drift — AUC changed {drift_report['auc_change']:+.4f}")
         action_num += 1
 
-    lines.append("\n" + "▓"*90)
+    lines.append("\n" + "#"*90)
     lines.append("  END OF REPORT")
-    lines.append("▓"*90 + "\n")
+    lines.append("#"*90 + "\n")
 
     report_text = "\n".join(lines)
 
-    with open(filepath, "w") as f:
+    with open(filepath, "w", encoding="utf-8") as f:
         f.write(report_text)
 
     return filepath, report_text
@@ -887,7 +895,7 @@ def auto_patch_weights(coeff_recs: dict, threshold_recs: dict) -> str:
 
     patch_path = os.path.join(AGENT_CONFIG["report_dir"], "pending_patch.json")
     os.makedirs(AGENT_CONFIG["report_dir"], exist_ok=True)
-    with open(patch_path, "w") as f:
+    with open(patch_path, "w", encoding="utf-8") as f:
         json.dump(patch, f, indent=2)
 
     return patch_path
@@ -918,10 +926,10 @@ class CollectionModelAgent:
         self.last_report = None
 
     def run(self):
-        print("\n" + "▓"*70)
-        print("  COLLECTION MODEL AGENT — AUDIT RUN STARTED")
+        print("\n" + "#"*70)
+        print("  COLLECTION MODEL AGENT -- AUDIT RUN STARTED")
         print(f"  {datetime.datetime.now().strftime('%d %b %Y %H:%M:%S')}")
-        print("▓"*70)
+        print("#"*70)
 
         # Step 1: Load data
         print("\n  [Agent] Loading borrower dataset + outcomes...")
@@ -956,7 +964,7 @@ class CollectionModelAgent:
         # Step 6: Drift detection
         drift_report = detect_drift(audit_result["cv_auc_mean"], new_attr_recs)
         if drift_report["drift_detected"]:
-            print(f"  [Agent] ⚠ MODEL DRIFT DETECTED! AUC change: "
+            print(f"  [Agent] !! MODEL DRIFT DETECTED! AUC change: "
                   f"{drift_report['auc_change']:+.4f}")
         else:
             print("  [Agent] No significant model drift detected.")
@@ -977,9 +985,9 @@ class CollectionModelAgent:
         # Print report to console
         print(report_text)
 
-        print("▓"*70)
+        print("#"*70)
         print("  AGENT RUN COMPLETE")
-        print("▓"*70 + "\n")
+        print("#"*70 + "\n")
 
         return {
             "audit":      audit_result,
